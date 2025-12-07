@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Demo Shop</title>
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+
+<header>
+    <div class="logo">MyCompany</div>
+    <nav>
+        <a onclick="showSection('home')">Home</a>
+        <a onclick="showSection('browse')">Browse</a>
+        <a onclick="openAbout()">About</a>
+    </nav>
+    <div class="cart">Cart</div>
+</header>
+
+<main>
+
+<section id="home">
+    <h2>Welcome</h2>
+    <p>This is our awesome homepage.</p>
+</section>
+
+<section id="browse" style="display:none;">
+    <h2>Browse</h2>
+    <div class="shop-wrapper">
+        <aside class="sidebar">
+            <h3>Departments</h3>
+            <div class="filter-group" id="genderSection"></div>
+            <div class="filter-group" id="categorySection"></div>
+            <div class="filter-group" id="sizeSection"></div>
+            <div class="filter-group" id="colorSection"></div>
+        </aside>
+        <div class="products-area">
+            <div class="products-top">
+                <select id="sort">
+                    <option value="name">Product Name (A-Z)</option>
+                    <option value="low">Price Low→High</option>
+                    <option value="high">Price High→Low</option>
+                    <option value="category">Category</option>
+                </select>
+                <button onclick="clearFilters()">Clear All</button>
+            </div>
+            <div class="selected-filters" id="selectedFilters" style="display:none;"></div>
+            <div class="product-grid" id="productGrid"></div>
+        </div>
+    </div>
+</section>
+
+<section id="singleProduct">
+    <div class="breadcrumb" id="breadcrumb"></div>
+    <div class="product-detail">
+        <div class="product-images">
+            <img id="mainImage" class="main-image" src="" alt="Product Image">
+            <div class="thumbnail-images" id="thumbnailImages"></div>
+        </div>
+        <div class="product-info">
+            <h2 id="productTitle"></h2>
+            <p id="productPrice"></p>
+            <p id="productDescription"></p>
+            <p><strong>Material:</strong> <span id="productMaterial"></span></p>
+            <div>
+                <label>Quantity: </label>
+                <input type="number" id="quantityInput" class="quantity" value="1" min="1">
+            </div>
+            <div class="size-options" id="sizeOptions"></div>
+            <div class="color-options" id="colorOptions"></div>
+            <button id="addToCartButton">Add to Cart</button>
+        </div>
+    </div>
+    <div class="related-products">
+        <h3>Related Products</h3>
+        <div class="related-products-grid" id="relatedProductsGrid"></div>
+    </div>
+</section>
+
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <h3>About Us</h3>
+        <p>We build cool things 😄</p>
+        <span class="close" onclick="closeAbout()">Close</span>
+    </div>
+</div>
+
+</main>
+
+<footer>
+    <a href="https://google.ca" target="_blank">Visit Google.ca</a>
+    <div style="margin-top:10px;">
+        © 2025 MyCompany – All Rights Reserved
+    </div>
+</footer>
+
+<script>
+function showSection(id){
+    document.getElementById('home').style.display='none';
+    document.getElementById('browse').style.display='none';
+    document.getElementById('singleProduct').style.display='none';
+    document.getElementById(id).style.display='block';
+}
+
+function openAbout(){ modal.style.display="flex" }
+function closeAbout(){ modal.style.display='none' }
+window.onclick = e=>{ if(e.target===modal) closeAbout() }
+
+let products=[];
+let filtered=[];
+let currentProduct=null;
+
+fetch("data-minifed.json")
+.then(r=>r.json())
+.then(data=>{
+    products = Array.isArray(data)? data : [data];
+    buildFiltersFromData(products);
+    filtered = products.slice();
+    sortProducts();
+    renderGrid();
+});
+
+function buildFiltersFromData(data){
+    const genderSet=new Set();
+    const categorySet=new Set();
+    const sizeSet=new Set();
+    const colorMap=new Map();
+
+    data.forEach(p=>{
+        if(p.gender) genderSet.add(p.gender);
+        if(p.category) categorySet.add(p.category);
+        if(p.sizes) p.sizes.forEach(s=>sizeSet.add(s));
+        if(p.color) p.color.forEach(c=>{
+            colorMap.set(c.name.toLowerCase(), c.hex || "#000");
+        });
+    });
+
+    createFilterGroup("genderSection",[...genderSet],"radio","gender","Gender");
+    createFilterGroup("categorySection",[...categorySet],"radio","category","Category");
+    createFilterGroup("sizeSection",[...sizeSet],"checkbox","size","Size");
+    createFilterGroup("colorSection",[...colorMap.keys()],"checkbox","color","Colors",colorMap);
+
+    document.querySelectorAll(".sidebar input").forEach(inp=>{
+        inp.addEventListener("change",applyFilters);
+    });
+}
+
+function createFilterGroup(sectionId, items, type, field, title, colorMap){
+    const sec=document.getElementById(sectionId);
+    sec.innerHTML="";
+    const header = document.createElement("div");
+    header.className="filter-group-header";
+    header.innerHTML = `<span>${title}</span> <span>▾</span>`;
+    sec.appendChild(header);
+    const content = document.createElement("div");
+    content.className="filter-group-content";
+    sec.appendChild(content);
+    items.sort().forEach(value=>{
+        const label=document.createElement("label");
+        if(field==="color" && colorMap){
+            label.className="color-label";
+            label.innerHTML=`
+                <input type="${type}" name="${field}" value="${value}">
+                ${value}
+                <span class="color-swatch" style="background:${colorMap.get(value)}"></span>
+                
+            `;
+        } else {
+            label.innerHTML=`
+                <input type="${type}" name="${field}" value="${value}">
+                ${value}
+            `;
+        }
+        content.appendChild(label);
+    });
+    header.addEventListener("click",()=>{sec.classList.toggle("collapsed");});
+}
+
+const gridEl=document.getElementById("productGrid");
+const selectedEl=document.getElementById("selectedFilters");
+
+document.getElementById("sort").addEventListener("change",()=>{
+    sortProducts();
+    renderGrid();
+});
+
+function applyFilters(){
+    const gender=document.querySelector("input[name='gender']:checked")?.value||"";
+    const category=document.querySelector("input[name='category']:checked")?.value||"";
+    const sizes=[...document.querySelectorAll("input[name='size']:checked")].map(i=>i.value);
+    const colors=[...document.querySelectorAll("input[name='color']:checked")].map(i=>i.value);
+
+    filtered=products.filter(p=>{
+        if(gender && p.gender!==gender) return false;
+        if(category && p.category!==category) return false;
+        if(sizes.length && !p.sizes.some(s=>sizes.includes(s))) return false;
+        if(colors.length){
+            const pcolors=p.color.map(c=>c.name.toLowerCase());
+            if(!colors.some(c=>pcolors.includes(c))) return false;
+        }
+        return true;
+    });
+
+    sortProducts();
+    renderSelectedFilters();
+    renderGrid();
+}
+
+function sortProducts(){
+    const val=document.getElementById("sort").value || "name";
+    if(val==="name") filtered.sort((a,b)=>a.name.localeCompare(b.name));
+    if(val==="low") filtered.sort((a,b)=>a.price-b.price);
+    if(val==="high") filtered.sort((a,b)=>b.price-a.price);
+    if(val==="category") filtered.sort((a,b)=>a.category.localeCompare(b.category));
+}
+
+function renderSelectedFilters(){
+    const gender=document.querySelector("input[name='gender']:checked")?.value;
+    const category=document.querySelector("input[name='category']:checked")?.value;
+    const sizes=[...document.querySelectorAll("input[name='size']:checked")].map(i=>i.value);
+    const colors=[...document.querySelectorAll("input[name='color']:checked")].map(i=>i.value);
+
+    const selected = [];
+    if(gender) selected.push({type:'gender', value:gender});
+    if(category) selected.push({type:'category', value:category});
+    sizes.forEach(s=>selected.push({type:'size', value:s}));
+    colors.forEach(c=>selected.push({type:'color', value:c}));
+
+    selectedEl.innerHTML="";
+    if(selected.length===0){
+        selectedEl.style.display="none";
+        return;
+    }
+    selectedEl.style.display="flex";
+    selected.forEach(item=>{
+        const span = document.createElement("span");
+        span.textContent = item.value;
+        span.addEventListener("click", ()=>{
+            document.querySelectorAll(`input[name='${item.type}']`).forEach(inp=>{
+                if(inp.value===item.value) inp.checked=false;
+            });
+            applyFilters();
+        });
+        selectedEl.appendChild(span);
+    });
+}
+
+function clearFilters(){
+    document.querySelectorAll(".sidebar input").forEach(i=>i.checked=false);
+    document.getElementById("sort").value="name";
+    filtered=products.slice();
+    renderSelectedFilters();
+    sortProducts();
+    renderGrid();
+}
+
+function renderGrid(){
+    gridEl.innerHTML="";
+    if(filtered.length===0){
+        gridEl.innerHTML='<p style="grid-column:1/-1;text-align:center;">No products found</p>';
+        return;
+    }
+
+    filtered.forEach(p=>{
+        const div=document.createElement("div");
+        div.className="product";
+        div.innerHTML=`
+            <img src="assignment2.jpg">
+            <h4>${p.name}</h4>
+            <div class="product-bottom">
+                <span>$${p.price.toFixed(2)}</span>
+                <button>Add</button>
+            </div>
+        `;
+        div.addEventListener("click", ()=>showSingleProduct(p));
+        gridEl.appendChild(div);
+    });
+}
+
+function showSingleProduct(p){
+    currentProduct = p;
+    showSection('singleProduct');
+
+    const bc = document.getElementById("breadcrumb");
+    bc.innerHTML = `<span class="breadcrumbs-link" onclick="showSection('home')">Home</span><span class="breadcrumbs-link" onclick="showSection('browse')">Browse</span><span>${p.gender}</span><span>${p.category}</span><span>${p.name}</span>`;
+
+    document.getElementById("mainImage").src = "assignment2.jpg";
+    const thumbContainer = document.getElementById("thumbnailImages");
+    thumbContainer.innerHTML="";
+    const allImages = p.images || [p.image || `assignment2.jpg`];
+    allImages.forEach(src=>{
+        const img = document.createElement("img");
+        img.src=src;
+        img.addEventListener("click", ()=>document.getElementById("mainImage").src=src);
+        thumbContainer.appendChild(img);
+    });
+
+    document.getElementById("productTitle").textContent=p.name;
+    document.getElementById("productPrice").textContent="$"+p.price.toFixed(2);
+    document.getElementById("productDescription").textContent=p.description || "";
+    document.getElementById("productMaterial").textContent=p.material || "";
+    document.getElementById("quantityInput").value=1;
+
+    const sizeContainer = document.getElementById("sizeOptions");
+    sizeContainer.innerHTML="";
+    (p.sizes || []).forEach(s=>{
+        const span = document.createElement("span");
+        span.textContent=s;
+        span.addEventListener("click", ()=> {
+            sizeContainer.querySelectorAll("span").forEach(e=>e.classList.remove("selected"));
+            span.classList.add("selected");
+        });
+        sizeContainer.appendChild(span);
+    });
+
+    const colorContainer = document.getElementById("colorOptions");
+    colorContainer.innerHTML="";
+    (p.color || []).forEach(c=>{
+        const span = document.createElement("span");
+        span.textContent=c.name;
+        span.style.background=c.hex;
+        span.style.color="#fff";
+        span.addEventListener("click", ()=> {
+            colorContainer.querySelectorAll("span").forEach(e=>e.classList.remove("selected"));
+            span.classList.add("selected");
+        });
+        colorContainer.appendChild(span);
+    });
+
+    const relatedEl = document.getElementById("relatedProductsGrid");
+    relatedEl.innerHTML="";
+    products.filter(r=>r.category===p.category && r.name!==p.name).slice(0,3)
+    .forEach(r=>{
+        const div=document.createElement("div");
+        div.className="product";
+        div.innerHTML=`
+            <img src="assignment2.jpg">
+            <h4>${r.name}</h4>
+            <div class="product-bottom">
+                <span>$${r.price.toFixed(2)}</span>
+                <button>Add</button>
+            </div>
+        `;
+        div.addEventListener("click", ()=>showSingleProduct(r));
+        relatedEl.appendChild(div);
+    });
+}
+</script>
+</body>
+</html>
