@@ -9,21 +9,58 @@
 <body>
 
 <header>
-    <div class="logo">MyCompany</div>
+    <div class="logo"><a onclick="showSection('home')">MyCompany</a></div>
     <nav>
         <a onclick="showSection('home')">Home</a>
         <a onclick="showSection('browse')">Browse</a>
         <a onclick="openAbout()">About</a>
+        <a onclick="showSection('cart')" data-view="cart" id="cartNavBtn">
+            Cart (<span id="cart-count">0</span>)
+            </a>
     </nav>
-    <div class="cart">Cart</div>
+            
 </header>
 
 <main>
 
 <section id="home">
-    <h2>Welcome</h2>
-    <p>This is our awesome homepage.</p>
-</section>
+<div class="home-hero-text">
+                <img src="assignment2_copy (1).png"></img>
+                <h2>Discover Your Next Look</h2>
+                <p>
+                    Browse our curated selection of clothing and build your own unique style.
+                </p>
+                <button onclick="showSection('browse')" id="homeShopBtn">Shop Now</button>
+            </div>
+            <h3>What's New</h3>
+            <div class="home-highlights-grid">
+
+                <div class="home-card">
+                    <div class="home-card-img home-card-img-spa"></div>
+                    <h4>Single-Page Application</h4>
+                    <p>
+                        Navigate between Home, Browse, Product, and Cart without reloading the page.
+                    </p>
+                </div>
+
+                <div class="home-card">
+                    <div class="home-card-img home-card-img-filter"></div>
+                    <h4>Dynamic Filtering</h4>
+                    <p>
+                        Filter by gender, category, size, and color; sort products to find what you need.
+                    </p>
+                </div>
+
+                <div class="home-card">
+                    <div class="home-card-img home-card-img-cart"></div>
+                    <h4>Persistent Cart</h4>
+                    <p>
+                        Items stay in your cart using localStorage, even after closing the browser.
+                    </p>
+                </div>
+
+            </div>
+        </section>
 
 <section id="browse" style="display:none;">
     <h2>Browse</h2>
@@ -81,10 +118,102 @@
 <div id="modal" class="modal">
     <div class="modal-content">
         <h3>About Us</h3>
-        <p>We build cool things 😄</p>
+        <p>
+        This single-page application was built for COMP 3512 Assignment 2 using
+        vanilla JavaScript, HTML, and CSS. It demonstrates client-side routing,
+        JSON data handling, localStorage persistence, and dynamic DOM updates.
+    </p>
+    <p>
+        Data source: clothing-compact.json (provided in the assignment).
+    </p>
+    <p>
+        Technologies: Fetch API, localStorage, flex/grid-based layout, and simple
+        component-style functions inspired by the course labs.
+    </p>
+    <p>
+        Developer: Alaister Standen, Arbel Nachmias.
+    </p>
+    <p>
+        GitHub repository: <a href="https://github.com/Arbeliuss/web2assignment2.git" target="_blank">View source on GitHub</a>
+    </p>
         <span class="close" onclick="closeAbout()">Close</span>
     </div>
 </div>
+
+<article id="view-cart" style="display:none">
+        <div class="cart-layout">
+
+            <!-- LEFT: items / bag -->
+            <section class="cart-main">
+                <h2>My Bag</h2>
+                <p class="cart-item-count">
+                    <span id="cart-count-main">0</span> items
+                </p>
+
+                <div class="cart-banner cart-banner-shipping">
+                    <strong>Ship Items</strong>
+                    <span>FREE standard shipping on eligible orders</span>
+                </div>
+
+                <section id="cart-items">
+                    <!-- rows injected by JS -->
+                </section>
+            </section>
+
+            <!-- RIGHT: summary -->
+            <aside class="cart-summary-panel">
+                <h3>Summary</h3>
+
+                <div class="cart-summary-box">
+                    <div class="cart-summary-row">
+                        <span>Merchandise</span>
+                        <span id="cart-merch">$0.00</span>
+                    </div>
+                    <div class="cart-summary-row">
+                        <span>Shipping</span>
+                        <span id="cart-shipping">$0.00</span>
+                    </div>
+                    <div class="cart-summary-row">
+                        <span>Tax</span>
+                        <span id="cart-tax">$0.00</span>
+                    </div>
+
+                    <hr>
+
+                    <div class="cart-summary-row cart-summary-total">
+                        <span>Estimated Total</span>
+                        <span id="cart-grand">$0.00</span>
+                    </div>
+
+                    <button class="checkout-btn">Checkout</button>
+                </div>
+
+                <!-- keep your shipping options (used by JS for costs) -->
+                <section id="cart-options">
+                    <h4>Shipping Options</h4>
+
+                    <label>
+                        Region:
+                        <select id="shipping-region">
+                            <option value="canada">Canada</option>
+                            <option value="usa">USA</option>
+                            <option value="intl">International</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Method:
+                        <select id="shipping-method">
+                            <option value="standard">Standard</option>
+                            <option value="express">Express</option>
+                            <option value="priority">Priority</option>
+                        </select>
+                    </label>
+                </section>
+            </aside>
+
+        </div>
+    </article>
 
 </main>
 
