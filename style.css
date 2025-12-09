@@ -363,3 +363,121 @@ footer a{
 .logo a img {
     height: 50px;
 }
+
+#cart {
+    max-width: 900px;
+    margin: 0 auto;
+    font-family: Arial, sans-serif;
+}
+
+#cart h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+#cartItems {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+#cartItems > div {
+    display: flex;
+    gap: 20px;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    align-items: center;
+    background-color: #fafafa;
+    transition: box-shadow 0.2s;
+}
+
+#cartItems > div:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.cart-img {
+    width: 100px;
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+#cartItems h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #222;
+}
+
+#cartItems p {
+    margin: 4px 0;
+    color: #555;
+}
+
+#cartItems strong {
+    margin-top: 6px;
+    display: block;
+    color: #000;
+}
+
+#cartItems button {
+    margin-left: auto;
+    padding: 6px 12px;
+    background-color: #e53935;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#cartItems button:hover {
+    background-color: #c62828;
+}
+
+#cart h3 {
+    margin-top: 30px;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+#cart label {
+    display: inline-block;
+    margin: 8px 0 4px;
+    font-weight: bold;
+}
+
+#cart select {
+    padding: 6px 10px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+#cart p {
+    font-size: 1rem;
+    margin: 5px 0;
+}
+
+#cart h3 + p, #cart h3 + h3 {
+    margin-top: 15px;
+}
+
+#cart button:last-of-type {
+    background-color: #4caf50;
+    color: white;
+    padding: 12px 25px;
+    font-size: 1rem;
+    border-radius: 6px;
+    margin-top: 15px;
+    width: 100%;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#cart button:last-of-type:hover {
+    background-color: #388e3c;
+}

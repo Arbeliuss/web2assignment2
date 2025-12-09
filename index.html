@@ -5,6 +5,7 @@
 <title>Demo Shop</title>
 <link rel="stylesheet" href="style.css">
 
+
 </head>
 <body>
 
@@ -115,6 +116,39 @@
     </div>
 </section>
 
+<section id="cart" style="display:none;padding:20px;">
+    <h2>Your Cart</h2>
+
+    <div id="cartItems"></div>
+
+        <h3>Shipping</h3>
+
+            <label>Shipping Type:</label>
+            <select id="shipType" disabled>
+            </select>
+
+            <br><br>
+
+            <label>Country:</label>
+            <select id="shipCountry" disabled>
+                <option value="Canada">Canada</option>
+                <option value="United States">United States</option>
+                <option value="International">International</option>
+            </select>
+
+            <h3>Summary</h3>
+            <p>Merchandise: $<span id="sumMerch">0</span></p>
+            <p>Shipping: $<span id="sumShip">0</span></p>
+            <p>Tax: $<span id="sumTax">0</span></p>
+            <h3>Total: $<span id="sumTotal">0</span></h3>
+
+            <button id="checkoutBtn" style="margin-top:20px;padding:10px 20px;" disabled>Checkout</button>
+
+            <div id="toaster" style="position:fixed;bottom:20px;right:20px;background:#4caf50;color:white;padding:12px 20px;border-radius:6px;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.1);">Checkout complete!</div>
+
+
+</section>
+
 <div id="modal" class="modal">
     <div class="modal-content">
         <h3>About Us</h3>
@@ -139,81 +173,6 @@
         <span class="close" onclick="closeAbout()">Close</span>
     </div>
 </div>
-
-<article id="view-cart" style="display:none">
-        <div class="cart-layout">
-
-            <!-- LEFT: items / bag -->
-            <section class="cart-main">
-                <h2>My Bag</h2>
-                <p class="cart-item-count">
-                    <span id="cart-count-main">0</span> items
-                </p>
-
-                <div class="cart-banner cart-banner-shipping">
-                    <strong>Ship Items</strong>
-                    <span>FREE standard shipping on eligible orders</span>
-                </div>
-
-                <section id="cart-items">
-                    <!-- rows injected by JS -->
-                </section>
-            </section>
-
-            <!-- RIGHT: summary -->
-            <aside class="cart-summary-panel">
-                <h3>Summary</h3>
-
-                <div class="cart-summary-box">
-                    <div class="cart-summary-row">
-                        <span>Merchandise</span>
-                        <span id="cart-merch">$0.00</span>
-                    </div>
-                    <div class="cart-summary-row">
-                        <span>Shipping</span>
-                        <span id="cart-shipping">$0.00</span>
-                    </div>
-                    <div class="cart-summary-row">
-                        <span>Tax</span>
-                        <span id="cart-tax">$0.00</span>
-                    </div>
-
-                    <hr>
-
-                    <div class="cart-summary-row cart-summary-total">
-                        <span>Estimated Total</span>
-                        <span id="cart-grand">$0.00</span>
-                    </div>
-
-                    <button class="checkout-btn">Checkout</button>
-                </div>
-
-                <!-- keep your shipping options (used by JS for costs) -->
-                <section id="cart-options">
-                    <h4>Shipping Options</h4>
-
-                    <label>
-                        Region:
-                        <select id="shipping-region">
-                            <option value="canada">Canada</option>
-                            <option value="usa">USA</option>
-                            <option value="intl">International</option>
-                        </select>
-                    </label>
-
-                    <label>
-                        Method:
-                        <select id="shipping-method">
-                            <option value="standard">Standard</option>
-                            <option value="express">Express</option>
-                            <option value="priority">Priority</option>
-                        </select>
-                    </label>
-                </section>
-            </aside>
-
-        </div>
-    </article>
 
 </main>
 
@@ -475,6 +434,194 @@ function showSingleProduct(p){
         relatedEl.appendChild(div);
     });
 }
+
+let cart = JSON.parse(localStorage.getItem("cart")||"[]");
+updateCartCount();
+
+document.getElementById("addToCartButton").addEventListener("click", ()=>{
+    if(!currentProduct) return;
+
+    const quantity = parseInt(document.getElementById("quantityInput").value);
+    const size = document.querySelector("#sizeOptions .selected")?.textContent||"";
+    const color = document.querySelector("#colorOptions .selected")?.textContent||"";
+
+    const item = {
+        id: currentProduct.id,
+        name: currentProduct.name,
+        price: currentProduct.price,
+        quantity,
+        size,
+        color
+    };
+
+    cart.push(item);
+    localStorage.setItem("cart", JSON.stringify(cart));
+    updateCartCount();
+    alert("Added to cart!");
+});
+
+
+function updateCartCount(){
+    document.getElementById("cart-count").textContent = cart.length;
+}
+
+
+function showSection(id){
+    document.getElementById('home').style.display='none';
+    document.getElementById('browse').style.display='none';
+    document.getElementById('singleProduct').style.display='none';
+    document.getElementById('cart').style.display='none';
+
+    document.getElementById(id).style.display='block';
+
+    if(id==="cart") {
+        renderCart();
+    }
+}
+
+
+function renderCart() {
+    cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    const div = document.getElementById("cartItems");
+    div.innerHTML = "";
+
+    let merchTotal = 0;
+
+    if(cart.length === 0) {
+        div.innerHTML = "<p style='text-align:center; font-size:1.2rem; color:#555;'>Your cart is empty.</p>";
+        document.getElementById("shipType").disabled = true;
+        document.getElementById("shipCountry").disabled = true;
+        document.getElementById("checkoutBtn").disabled = true;
+        document.getElementById("sumMerch").textContent = "0.00";
+        document.getElementById("sumShip").textContent = "0.00";
+        document.getElementById("sumTax").textContent = "0.00";
+        document.getElementById("sumTotal").textContent = "0.00";
+        return;
+    }
+
+    document.getElementById("shipType").disabled = false;
+    document.getElementById("shipCountry").disabled = false;
+    document.getElementById("checkoutBtn").disabled = false;
+
+    cart.forEach((item, i) => {
+        const subtotal = item.price * item.quantity;
+        merchTotal += subtotal;
+
+        const el = document.createElement("div");
+        el.style.border = "1px solid #ccc";
+        el.style.margin = "10px 0";
+        el.style.padding = "10px";
+        el.innerHTML = `
+            <img src="assignment2.jpg" class="cart-img" style="width:80px;height:auto;margin-bottom:10px;">
+            <h4>${item.name}</h4>
+            <p>Size: ${item.size}</p>
+            <p>Color: ${item.color}</p>
+            <p>Price: $${item.price.toFixed(2)}</p>
+            <p>Qty: ${item.quantity}</p>
+            <strong>Subtotal: $${subtotal.toFixed(2)}</strong>
+            <button onclick="removeFromCart(${i})">Remove</button>
+        `;
+        div.appendChild(el);
+    });
+
+    const country = document.getElementById("shipCountry").value;
+    const shipSelect = document.getElementById("shipType");
+    const previousSelection = parseFloat(shipSelect.value) || 0;
+
+    shipSelect.innerHTML = "";
+
+    let shippingRates = [];
+    if(country === "Canada") shippingRates = [ {name:"Standard",price:10}, {name:"Express",price:25}, {name:"Priority",price:35} ];
+    else if(country === "United States") shippingRates = [ {name:"Standard",price:15}, {name:"Express",price:25}, {name:"Priority",price:50} ];
+    else shippingRates = [ {name:"Standard",price:20}, {name:"Express",price:30}, {name:"Priority",price:50} ];
+
+    shippingRates.forEach(opt=>{
+        const option = document.createElement("option");
+        option.value = opt.price;
+        option.textContent = `${opt.name} ($${opt.price})`;
+        shipSelect.appendChild(option);
+    });
+
+    if(previousSelection && shippingRates.some(o => o.price === previousSelection)) {
+        shipSelect.value = previousSelection;
+    }
+
+    let shippingCost = parseFloat(shipSelect.value);
+
+    if(merchTotal >= 500) shippingCost = 0;
+
+    const tax = merchTotal * 0.05;
+    const total = merchTotal + shippingCost + tax;
+
+    document.getElementById("sumMerch").textContent = merchTotal.toFixed(2);
+    document.getElementById("sumShip").textContent = shippingCost.toFixed(2);
+    document.getElementById("sumTax").textContent = tax.toFixed(2);
+    document.getElementById("sumTotal").textContent = total.toFixed(2);
+    document.getElementById("shipType").addEventListener("change", updateSummary);
+    document.getElementById("shipCountry").addEventListener("change", updateSummary);
+
+}
+
+function removeFromCart(index){
+    let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    cart.splice(index, 1);
+    localStorage.setItem("cart", JSON.stringify(cart));
+    renderCart();
+}
+
+document.getElementById("checkoutBtn").addEventListener("click", ()=>{
+    const toaster = document.getElementById("toaster");
+    toaster.style.display = "block";
+    setTimeout(()=>{ toaster.style.display = "none"; }, 3000);
+
+    cart = [];
+    localStorage.setItem("cart", JSON.stringify(cart));
+
+    updateCartCount();
+    renderCart();
+
+    showSection('home');
+});
+
+function updateSummary() {
+    cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    if(cart.length === 0) return;
+
+    let merchTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+    const country = document.getElementById("shipCountry").value;
+    const shipSelect = document.getElementById("shipType");
+
+    let shippingRates = [];
+    if(country === "Canada") shippingRates = [ {name:"Standard",price:10}, {name:"Express",price:25}, {name:"Priority",price:35} ];
+    else if(country === "United States") shippingRates = [ {name:"Standard",price:15}, {name:"Express",price:25}, {name:"Priority",price:50} ];
+    else shippingRates = [ {name:"Standard",price:20}, {name:"Express",price:30}, {name:"Priority",price:50} ];
+
+    const previousSelection = parseFloat(shipSelect.value) || 0;
+    shipSelect.innerHTML = "";
+    shippingRates.forEach(opt=>{
+        const option = document.createElement("option");
+        option.value = opt.price;
+        option.textContent = `${opt.name} ($${opt.price})`;
+        shipSelect.appendChild(option);
+    });
+    if(previousSelection && shippingRates.some(o => o.price === previousSelection)) {
+        shipSelect.value = previousSelection;
+    }
+
+    let shippingCost = parseFloat(shipSelect.value);
+
+    if(merchTotal > 500) shippingCost = 0;
+
+    const tax = merchTotal * 0.05;
+    const total = merchTotal + shippingCost + tax;
+
+    document.getElementById("sumMerch").textContent = merchTotal.toFixed(2);
+    document.getElementById("sumShip").textContent = shippingCost.toFixed(2);
+    document.getElementById("sumTax").textContent = tax.toFixed(2);
+    document.getElementById("sumTotal").textContent = total.toFixed(2);
+}
+
 </script>
 </body>
 </html>
