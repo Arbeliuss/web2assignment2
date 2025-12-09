@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Demo Shop</title>
+<title>Inter Miami Shop</title>
 <link rel="stylesheet" href="style.css">
+<style>
+#browse, #singleProduct, #cart {
+    display: none;
+}
+</style>
 
 
 </head>
@@ -63,7 +68,7 @@
             </div>
         </section>
 
-<section id="browse" style="display:none;">
+<section id="browse">
     <h2>Browse</h2>
     <div class="shop-wrapper">
         <aside class="sidebar">
@@ -83,7 +88,7 @@
                 </select>
                 <button onclick="clearFilters()">Clear All</button>
             </div>
-            <div class="selected-filters" id="selectedFilters" style="display:none;"></div>
+            <div class="selected-filters" id="selectedFilters"></div>
             <div class="product-grid" id="productGrid"></div>
         </div>
     </div>
@@ -116,7 +121,7 @@
     </div>
 </section>
 
-<section id="cart" style="display:none;padding:20px;">
+<section id="cart">
     <h2>Your Cart</h2>
 
     <div id="cartItems"></div>
@@ -142,9 +147,9 @@
             <p>Tax: $<span id="sumTax">0</span></p>
             <h3>Total: $<span id="sumTotal">0</span></h3>
 
-            <button id="checkoutBtn" style="margin-top:20px;padding:10px 20px;" disabled>Checkout</button>
+            <button id="checkoutBtn" disabled>Checkout</button>
 
-            <div id="toaster" style="position:fixed;bottom:20px;right:20px;background:#4caf50;color:white;padding:12px 20px;border-radius:6px;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.1);">Checkout complete!</div>
+            <div id="toaster">Checkout complete!</div>
 
 
 </section>
@@ -177,8 +182,7 @@
 </main>
 
 <footer>
-    <a href="https://google.ca" target="_blank">Visit Google.ca</a>
-    <div style="margin-top:10px;">
+    <div>
         © 2025 MyCompany – All Rights Reserved
     </div>
 </footer>
@@ -563,11 +567,12 @@ function renderCart() {
 }
 
 function removeFromCart(index){
-    let cart = JSON.parse(localStorage.getItem("cart") || "[]");
     cart.splice(index, 1);
     localStorage.setItem("cart", JSON.stringify(cart));
+    updateCartCount();
     renderCart();
 }
+
 
 document.getElementById("checkoutBtn").addEventListener("click", ()=>{
     const toaster = document.getElementById("toaster");
