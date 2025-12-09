@@ -8,7 +8,7 @@ const TAX_RATE = 0.05;
 let allProducts = [];
 let cartItems = [];
 
-// SPA routing + about dialog
+// routing + about dialog
 document.addEventListener("DOMContentLoaded", function () {
     // 1. cache references to all view <article> elements
     const views = {
@@ -331,7 +331,7 @@ function computeShipping(merchTotal, region, method) {
     // Priority: 35–50 depending on region
 
     if (method === "standard") {
-        if (region === "canada") return 0;
+        if (region === "canada") return 10;
         if (region === "usa") return 15;
         if (region === "intl") return 30;
     }
