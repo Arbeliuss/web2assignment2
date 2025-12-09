@@ -359,3 +359,7 @@ footer a{
     width: 100%;
     height: 500px;
 }
+
+.logo a img {
+    height: 50px;
+}
